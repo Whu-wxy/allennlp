@@ -18,6 +18,10 @@ def MR_visualize(predict_result: Dict,
     只输入一个问题和一篇文章，输出一组图
     保存attention和最后预测时概率分布值可视化结果
     """
+    if serialization_dir is not None:
+        if os.path.exists(serialization_dir) == False:
+            os.mkdir(serialization_dir)
+
     attention_visualize(predict_result, serialization_dir, show_img, show_colorbar)
     vec_visualize(predict_result, serialization_dir, show_img)
 
@@ -28,9 +32,7 @@ def attention_visualize(predict_result: Dict,
     """
     可视化显示模型中间层的“文章-问题”相似度矩阵
     """
-    if serialization_dir is not None:
-        os.mkdir(serialization_dir)
-
+    
     cur_time = time.strftime("%Y%m%d_%H%M", time.localtime())
     if serialization_dir is not None:
         cur_time = serialization_dir + '/' + cur_time
@@ -52,12 +54,12 @@ def attention_visualize(predict_result: Dict,
     tick_spacing = 1
     ax.xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
     ax.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
-    ax.set_xticklabels([''] + list(df.columns), rotation=90, fontsize=2)
-    ax.set_yticklabels([''] + list(df.index), fontsize=3)
+    ax.set_xticklabels([''] + list(df.columns), rotation=90, fontsize=4)
+    ax.set_yticklabels([''] + list(df.index), fontsize=4)
 
     #保存
     savedir = cur_time+'_attention.jpg'
-    plt.savefig(savedir, dpi=500)
+    plt.savefig(savedir, dpi=600)
     if show_img:
         plt.show()
 
@@ -68,8 +70,6 @@ def vec_visualize(predict_result: Dict,
     """
     可视化显示模型最后预测的start，end概率分布值
     """
-    if serialization_dir is not None:
-        os.mkdir(serialization_dir)
 
     passage = np.array(predict_result['passage_tokens'])
 
@@ -92,7 +92,7 @@ def vec_visualize(predict_result: Dict,
 
     #Logits图
     plt.figure()
-    plt.xticks(range(n_bins), passage, rotation=90, fontsize=3)
+    
     plt.plot(range(n_bins), start_logits, label="start_logits", linewidth=0.8)
     plt.plot(range(n_bins), end_logits, label="end_logits", linewidth=0.8)
     plt.annotate(passage[sLogit_max], xy=(sLogit_max, start_logits[sLogit_max]), xytext=(sLogit_max-15, start_logits[sLogit_max]),
@@ -102,18 +102,21 @@ def vec_visualize(predict_result: Dict,
             arrowprops=dict(facecolor='black', headwidth=4, headlength=3, width=0.3),
             )        
     bottom, top = plt.ylim()
+    ax = plt.gca() 
+    ax.spines['bottom'].set_position(('data', bottom))
+    plt.xticks(range(n_bins), passage, rotation=90, fontsize=4) #设置spines后xticks设置的属性消失，xticks放在后面
+
     plt.plot([sLogit_max,sLogit_max],[bottom,start_logits[sLogit_max]], color ='red', linewidth=0.5, linestyle="--")
     plt.plot([eLogit_max,eLogit_max],[bottom,end_logits[eLogit_max]], color ='red', linewidth=0.5, linestyle="--")
     plt.legend()
     #保存
     savedir = cur_time+'_logit.jpg'
-    plt.savefig(savedir, dpi=500)
+    plt.savefig(savedir, dpi=600)
     
     #Probs图
     plt.figure()
-    plt.xticks(range(n_bins), passage, rotation=90, fontsize=3)
-    plt.plot(range(n_bins), start_probs, label="start_probs", linewidth=0.8)
-    plt.plot(range(n_bins), end_probs, label="end_probs", linewidth=0.8)
+    plt.plot(range(n_bins), start_probs, label="start_probabiliy", linewidth=0.8)
+    plt.plot(range(n_bins), end_probs, label="end_probabiliy", linewidth=0.8)
     plt.annotate(passage[sProb_max], xy=(sProb_max, start_probs[sProb_max]), xytext=(sProb_max-15, start_probs[sProb_max]),
                 arrowprops=dict(facecolor='black', headwidth=4, headlength=3, width=0.3),
                 )
@@ -121,12 +124,37 @@ def vec_visualize(predict_result: Dict,
             arrowprops=dict(facecolor='black', headwidth=4, headlength=3, width=0.3),
             )        
     bottom, top = plt.ylim()
+    ax = plt.gca() 
+    ax.spines['bottom'].set_position(('data', bottom))
+    plt.xticks(range(n_bins), passage, rotation=90, fontsize=4)  #设置spines后xticks设置的属性消失，xticks放在后面
+
     plt.plot([sProb_max,sProb_max],[bottom,start_probs[sProb_max]], color ='red', linewidth=0.5, linestyle="--")
     plt.plot([eProb_max,eProb_max],[bottom,end_probs[eProb_max]], color ='red', linewidth=0.5, linestyle="--")
     plt.legend()
     #保存
     savedir = cur_time+'_prob.jpg'
-    plt.savefig(savedir, dpi=500)
+    plt.savefig(savedir, dpi=600)
 
     if show_img:
         plt.show()
+
+
+def to_predict(model_file, txt_file, question, visual:bool = True, save_dir:str = None, show_img:bool = False)
+    from allennlp.predictors import BidafPredictor
+    # load model
+    if model_file is None:
+        bidaf = BidafPredictor.from_path('F:/dl-data/save/origin/model.tar.gz')
+    else:
+        bidaf = BidafPredictor.from_path(model_file)
+    # predict
+    if txt_file is None:
+        with open("F:\\test.txt", 'r') as f:
+    else:
+        with open(txt_file, 'r') as f:
+            res = bidaf.predict('Who designed the Vince Lombardi Trophy?', f.read())
+
+    if visual:
+        if save_dir is None:
+            MR_visualize(res, 'F:/zzzzz', show_img=False)
+        else:
+            MR_visualize(res, save_dir, show_img=False)
