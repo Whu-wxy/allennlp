@@ -133,6 +133,7 @@ def train_model_from_file(parameter_filename: str,
     """
     # Load the experiment config from a file and pass it to ``train_model``.
     params = Params.from_file(parameter_filename, overrides)
+
     return train_model(params, serialization_dir, file_friendly_logging, recover, force)
 
 
