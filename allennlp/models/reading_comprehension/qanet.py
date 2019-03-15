@@ -70,7 +70,7 @@ class QaNet(Model):
         self._embedding_proj_layer = torch.nn.Linear(text_embed_dim, encoding_in_dim)
         self._highway_layer = Highway(encoding_in_dim, num_highway_layers)
 
-        self._encoding_proj_layer = torch.nn.Linear(encoding_in_dim, encoding_in_dim)
+        self._encoding_proj_layer = torch.nn.Linear(encoding_in_dim, encoding_in_dim) #原文用一维卷积
         self._phrase_layer = phrase_layer
 
         self._matrix_attention = matrix_attention_layer
