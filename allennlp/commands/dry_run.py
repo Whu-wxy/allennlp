@@ -39,6 +39,7 @@ from allennlp.data import Vocabulary
 from allennlp.data.dataset import Batch
 from allennlp.models import Model
 from allennlp.training.util import datasets_from_params
+from allennlp.common.util import prepare_global_logging, cleanup_global_logging
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -124,9 +125,14 @@ def dry_run_from_params(params: Params, serialization_dir: str) -> None:
 
     frozen_parameter_names, tunable_parameter_names = \
                    get_frozen_and_tunable_parameter_names(model)
+
+    stdout_handler = prepare_global_logging(serialization_dir, False)
+
     logger.info("Following parameters are Frozen  (without gradient):")
     for name in frozen_parameter_names:
         logger.info(name)
     logger.info("Following parameters are Tunable (with gradient):")
     for name in tunable_parameter_names:
         logger.info(name)
+
+    cleanup_global_logging(stdout_handler)
