@@ -10,3 +10,4 @@ from allennlp.models.reading_comprehension.bidaf_ensemble import BidafEnsemble
 from allennlp.models.reading_comprehension.dialog_qa import DialogQA
 from allennlp.models.reading_comprehension.naqanet import NumericallyAugmentedQaNet
 from allennlp.models.reading_comprehension.qanet import QaNet
+from allennlp.models.reading_comprehension.qanet_fine_grained import QaNet_fine_grained
