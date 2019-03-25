@@ -94,6 +94,9 @@
             "type": "stacked_coattention",
             "input_dim": 128,
             "feedforward_hidden_dim": 128,
+            "num_layers": 3,
+            "num_attention_heads": 8,
+            "use_positional_encoding": true,
             "dropout_prob": 0.2,
             "residual_dropout_prob":0.2,
             "attention_dropout_prob":0.1
