@@ -52,6 +52,7 @@ class QaNet_fine_grained(Model):
                  num_highway_layers: int,
                  phrase_layer: Seq2SeqEncoder,
                  coattention_layer: Seq2SeqEncoder,
+                 matrix_attention_layer: MatrixAttention,
                  modeling_layer: Seq2SeqEncoder,
                  dropout_prob: float = 0.1,
                  initializer: InitializerApplicator = InitializerApplicator(),
@@ -74,9 +75,10 @@ class QaNet_fine_grained(Model):
         self._encoding_proj_layer = torch.nn.Linear(phrase_in_dim, phrase_in_dim) #原文用一维卷积
         self._phrase_layer = phrase_layer
 
-        self._coattention_layer = coattention_layer
+        self._multihead_coattention_layer = coattention_layer
 
-        self._modeling_proj_layer = torch.nn.Linear(coatt_out_dim, modeling_in_dim)
+        # 7d->d
+        self._modeling_proj_layer = torch.nn.Linear(coatt_out_dim+phrase_out_dim*4, modeling_in_dim)
         self._modeling_layer = modeling_layer
 
         self._span_start_predictor = torch.nn.Linear(modeling_out_dim * 2, 1)
@@ -160,13 +162,44 @@ class QaNet_fine_grained(Model):
         encoded_question = self._dropout(self._phrase_layer(projected_embedded_question, question_mask))
         encoded_passage = self._dropout(self._phrase_layer(projected_embedded_passage, passage_mask))
 
+
+        # Shape: (batch_size, passage_length, question_length)
+        passage_question_similarity = self._matrix_attention(encoded_passage, encoded_question)
+        # Shape: (batch_size, passage_length, question_length)
+        passage_question_attention = masked_softmax(
+            passage_question_similarity,
+            question_mask,
+            memory_efficient=True)
+        # Shape: (batch_size, passage_length, encoding_dim)
+        passage_question_vectors = util.weighted_sum(encoded_question, passage_question_attention)
+
+        # Shape: (batch_size, question_length, passage_length)
+        question_passage_attention = masked_softmax(
+            passage_question_similarity.transpose(1, 2),
+            passage_mask,
+            memory_efficient=True)
+        # Shape: (batch_size, passage_length, passage_length)
+        attention_over_attention = torch.bmm(passage_question_attention, question_passage_attention)
+        # Shape: (batch_size, passage_length, encoding_dim)
+        passage_passage_vectors = util.weighted_sum(encoded_passage, attention_over_attention)
+
+
         # Shape: (batch_size, passage_length, dim), (batch_size, question_length, dim)
-        merged_passage_attention_vectors, coatt_question = self._coattention_layer(encoded_passage, encoded_question, passage_mask, question_mask)
+        coattention_vectors, coatt_question = self._multihead_coattention_layer(encoded_passage, encoded_question, passage_mask, question_mask)
         if not self.training:
             # Shape: (batch_size, passage_length, question_length)
             passage_question_attention = merged_passage_attention_vectors.bmm(coatt_question.transpose(1, 2))
         elif self.training:
             passage_question_attention = None
+
+            # Shape: (batch_size, passage_length, encoding_dim * 4)
+        merged_passage_attention_vectors = self._dropout(
+            torch.cat([encoded_passage, passage_question_vectors,
+                       encoded_passage * passage_question_vectors,
+                       encoded_passage * passage_passage_vectors,
+                       coattention_vectors],
+                      dim=-1)
+        )
 
         modeled_passage_list = [self._modeling_proj_layer(merged_passage_attention_vectors)]
 
