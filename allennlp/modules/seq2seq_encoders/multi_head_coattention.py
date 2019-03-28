@@ -47,7 +47,7 @@ class MultiHeadCoAttention(Seq2SeqEncoder):
                              f"attention heads ({num_heads}).")
 
         #self._combined_projection = Linear(input_dim, 2 * input_dim + values_dim)
-        self._input_highway_layer = Highway(input_dim)
+        self._input_high_way_layer = Highway(input_dim)
         self._combined_projection = Linear(input_dim, 2 * input_dim)  # Query & Value
 
         self._scale = (input_dim // num_heads) ** 0.5
@@ -93,8 +93,8 @@ class MultiHeadCoAttention(Seq2SeqEncoder):
         if question_mask is None:
             question_mask = question_tensor.new_ones(batch_size, question_length)
 
-        passage_tensor = self._input_highway_layer(passage_tensor)
-        question_tensor = self._input_highway_layer(question_tensor)
+        passage_tensor = self._input_high_way_layer(passage_tensor)
+        question_tensor = self._input_high_way_layer(question_tensor)
 
         # Shape (batch_size, passage, 2 * input_dim)
         combined_projection = self._combined_projection(passage_tensor)

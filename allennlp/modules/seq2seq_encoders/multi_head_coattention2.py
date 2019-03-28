@@ -35,11 +35,11 @@ class MultiHeadCoAttention2(Seq2SeqEncoder):
                  num_heads: int,
                  input_dim: int,
                  attention_dropout_prob: float = 0.1) -> None:
-        super(MultiHeadCoAttention, self).__init__()
+        super(MultiHeadCoAttention2, self).__init__()
 
         self._num_heads = num_heads
         self._input_dim = input_dim
-        self._output_dim = output_projection_dim or input_dim*3
+        self._output_dim = input_dim*3
 
         if input_dim % num_heads != 0:
             raise ValueError(f"Key size ({input_dim}) must be divisible by the number of "
