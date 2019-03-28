@@ -76,6 +76,7 @@ class QaNet_fine_grained(Model):
         self._encoding_proj_layer = torch.nn.Linear(phrase_in_dim, phrase_in_dim) #原文用一维卷积
         self._phrase_layer = phrase_layer
 
+        self._matrix_attention = matrix_attention_layer
         self._multihead_coattention_layer = coattention_layer
 
         # 7d->d
