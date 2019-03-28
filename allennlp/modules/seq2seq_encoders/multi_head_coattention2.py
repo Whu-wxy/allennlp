@@ -50,6 +50,7 @@ class MultiHeadCoAttention2(Seq2SeqEncoder):
 
         self._scale = (input_dim // num_heads) ** 0.5
         self._attention_dropout = Dropout(attention_dropout_prob)
+        self.dropout = Dropout(attention_dropout_prob)
 
     def get_input_dim(self):
         return self._input_dim
