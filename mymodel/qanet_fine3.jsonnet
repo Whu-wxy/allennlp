@@ -43,19 +43,19 @@
             // We kept all the original lowercased words and their embeddings. But there are also many words
             // with only the uppercased version. To include as many words as possible, we lowered those words
             // and used the embeddings of uppercased words as an alternative.
-            "tokens": "/glove/glove.840B.300d.lower.converted.zip"
+            "tokens": "/home/beidou/PythonWork/wxy/data/glove/glove.840B.300d.lower.converted.zip"
         },
         "only_include_pretrained_words": true
     },
-    "train_data_path": "/train-v1.1.json",
-    "validation_data_path": "/dev-v1.1.json",
+   "train_data_path": "/home/beidou/PythonWork/wxy/data/SQuAD/train-v1.1.json",
+    "validation_data_path": "/home/beidou/PythonWork/wxy/data/SQuAD/dev-v1.1.json",
     "model": {
-        "type": "qanet_fine",
+        "type": "qanet_fine3",
         "text_field_embedder": {
             "token_embedders": {
                 "tokens": {
                     "type": "embedding",
-                    "pretrained_file": "/glove/glove.840B.300d.lower.converted.zip",
+                    "pretrained_file": "/home/beidou/PythonWork/wxy/data/glove/glove.840B.300d.lower.converted.zip",
                     "embedding_dim": 300,
                     "trainable": false
                 },
@@ -126,7 +126,18 @@
                     "alpha": 1e-07
                 }
             ]
-        ]
+        ],
+"initializer": [
+[ ".*_text_field_embedder.*|_model_highway_layer._layers.*|.*encoding_proj.*|.*_phrase_layer.*|.*_modeling_layer.*|.*predictor.*|.*_matrix_attention.*",
+		      {
+		          "type": "pretrained",
+		          "weights_file_path": "./weights.th"
+		        }
+        ],
+[".*_coattention_layer.*weight", {"type": "xavier_normal"}],
+      [".*_coattention_layer.*bias", {"type": "constant", "val": 0}]
+      
+    ]
     },
     "iterator": {
         "type": "bucket",

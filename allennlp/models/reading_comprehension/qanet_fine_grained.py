@@ -190,7 +190,7 @@ class QaNet_fine_grained(Model):
         coattention_vectors, coatt_question = self._multihead_coattention_layer(encoded_passage, encoded_question, passage_mask, question_mask)
         if not self.training:
             # Shape: (batch_size, passage_length, question_length)
-            passage_question_attention = merged_passage_attention_vectors.bmm(coatt_question.transpose(1, 2))
+            passage_question_attention = passage_passage_vectors.bmm(coatt_question.transpose(1, 2))
         elif self.training:
             passage_question_attention = None
 
