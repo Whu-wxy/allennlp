@@ -119,7 +119,6 @@ class MultiHeadCoAttention3_block(Seq2SeqEncoder):
         self._output_projection = Linear(input_dim*3, input_dim)
 
         self._scale = (input_dim // num_heads) ** 0.5
-        self._attention_dropout = Dropout(attention_dropout_prob)
         self.dropout = Dropout(attention_dropout_prob)
 
     def get_input_dim(self):
@@ -204,7 +203,7 @@ class MultiHeadCoAttention3_block(Seq2SeqEncoder):
 
         # Shape: (num_heads * batch_size, passage_length, passage_length)
         attention_over_attention = torch.bmm(passage_question_attention, question_passage_attention)
-        attention_over_attention = self._attention_dropout(attention_over_attention)
+        attention_over_attention = self.dropout(attention_over_attention)
         # Shape: (num_heads * batch_size, passage_length, input_dim/num_heads)
         passage_passage_vectors = weighted_sum(values_per_head, attention_over_attention)
 

@@ -1,1 +1,0 @@
-from mymodel.qanet_fine_grained import QaNet_fine_grained

@@ -97,7 +97,8 @@
             "combination": "x,y,x*y"
         },
         "coattention_layer": {
-            "type": "multi_head_coattention2",
+            "type": "multi_head_coattention3",
+            "num_blocks": 3,
             "input_dim": 128,
             "num_heads": 8,
             "attention_dropout_prob":0.1
