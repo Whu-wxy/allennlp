@@ -120,10 +120,10 @@ class MultiHeadCoAttention_block4(Seq2SeqEncoder):
         #self._combined_projection = Linear(input_dim, 2 * input_dim + values_dim)
         self._combined_projection = Linear(input_dim, 2 * input_dim)  # Query & Value
 
-        self.feedforward_norm_layer = LayerNorm(hidden_dim)
         self._output_projection = Linear(input_dim*3, input_dim)
 
-        self._norm_layer = LayerNorm(hidden_dim)
+        self._norm_layer = LayerNorm(input_dim)
+        self._merged_norm_layer = LayerNorm(input_dim*3)
 
         self._scale = (input_dim // num_heads) ** 0.5
         self.dropout = Dropout(attention_dropout_prob)
@@ -234,7 +234,7 @@ class MultiHeadCoAttention_block4(Seq2SeqEncoder):
         passage_question_vectors = passage_question_vectors.view(batch_size, passage_length, self._input_dim)
 
 
-        merged_passage_attention_vectors = self._norm_layer(torch.cat([passage_question_vectors,
+        merged_passage_attention_vectors = self._merged_norm_layer(torch.cat([passage_question_vectors,
                        passage_tensor * passage_question_vectors,
                        passage_tensor * passage_passage_vectors],
                       dim=-1))
