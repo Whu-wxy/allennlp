@@ -45,7 +45,7 @@ class MultiHeadCoAttention4(Seq2SeqEncoder):
 
         self._coattention_blocks: List[MultiHeadCoAttention_block] = []
         for block_index in range(num_blocks):
-            coattention_block = MultiHeadCoAttention_block(num_heads,
+            coattention_block = MultiHeadCoAttention_block4(num_heads,
                                                              input_dim,
                                                              attention_dropout_prob)
             self.add_module(f"coattention_block_{block_index}", coattention_block)
@@ -78,8 +78,8 @@ class MultiHeadCoAttention4(Seq2SeqEncoder):
 
 
 
-@Seq2SeqEncoder.register("multi_head_coattention_block")
-class MultiHeadCoAttention_block(Seq2SeqEncoder):
+@Seq2SeqEncoder.register("multi_head_coattention_block4")
+class MultiHeadCoAttention_block4(Seq2SeqEncoder):
     # pylint: disable=line-too-long
     """
     This class implements the key-value scaled dot product attention mechanism
@@ -107,7 +107,7 @@ class MultiHeadCoAttention_block(Seq2SeqEncoder):
                  num_heads: int,
                  input_dim: int,
                  attention_dropout_prob: float = 0.1) -> None:
-        super(MultiHeadCoAttention_block, self).__init__()
+        super(MultiHeadCoAttention_block4, self).__init__()
 
         self._num_heads = num_heads
         self._input_dim = input_dim
@@ -238,7 +238,7 @@ class MultiHeadCoAttention_block(Seq2SeqEncoder):
                        passage_tensor * passage_question_vectors,
                        passage_tensor * passage_passage_vectors],
                       dim=-1))
-        # shape (batch_size, timesteps, input_size*4)
+        # shape (batch_size, timesteps, input_size*3)
         merged_passage_attention_vectors = self.dropout(merged_passage_attention_vectors)
         output = self._output_projection(merged_passage_attention_vectors)
         output = relu(output) + passage_tensor
