@@ -12,3 +12,4 @@ from allennlp.models.reading_comprehension.naqanet import NumericallyAugmentedQa
 from allennlp.models.reading_comprehension.qanet import QaNet
 from allennlp.models.reading_comprehension.qanet_fine_grained import QaNet_fine_grained
 from allennlp.models.reading_comprehension.qanet_fine_grained3 import QaNet_fine_grained3
+from allennlp.models.reading_comprehension.qanet_pure_fine import QaNet_pure_fine
