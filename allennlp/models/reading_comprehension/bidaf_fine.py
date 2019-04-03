@@ -83,7 +83,7 @@ class BidirectionalAttentionFlow_multico(Model):
                                                       num_highway_layers))
         self._phrase_layer = phrase_layer
         self._matrix_attention = LegacyMatrixAttention(similarity_function)
-        self._multicoatt_layer = multicoatt_layer
+        self._coattention_layer = multicoatt_layer
         self._modeling_layer = modeling_layer
         self._span_end_encoder = span_end_encoder
 
@@ -208,7 +208,7 @@ class BidirectionalAttentionFlow_multico(Model):
                                                                                     passage_length,
                                                                                     encoding_dim)
 
-        coattention_vectors = self._multicoatt_layer(encoded_passage, encoded_question, passage_mask, question_mask)
+        coattention_vectors = self._coattention_layer(encoded_passage, encoded_question, passage_mask, question_mask)
 
         # Shape: (batch_size, passage_length, encoding_dim * 5)
         final_merged_passage = torch.cat([encoded_passage,

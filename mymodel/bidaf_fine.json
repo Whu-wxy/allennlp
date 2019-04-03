@@ -17,15 +17,15 @@
       }
     }
   },
-  "train_data_path": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/squad/squad-train-v1.1.json",
-  "validation_data_path": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/squad/squad-dev-v1.1.json",
+  "train_data_path": "/train-v1.1.json",
+  "validation_data_path": "/dev-v1.1.json",
   "model": {
     "type": "bidaf_multico",
     "text_field_embedder": {
         "token_embedders": {
             "tokens": {
                 "type": "embedding",
-                "pretrained_file": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/glove/glove.6B.100d.txt.gz",
+                "pretrained_file": "/glove.6B.100d.txt.gz",
                 "embedding_dim": 100,
                 "trainable": false
             },
@@ -60,6 +60,13 @@
       "tensor_1_dim": 200,
       "tensor_2_dim": 200
     },
+        "coattention_layer": {
+            "type": "multi_head_coattention4",
+            "num_blocks": 1,
+            "input_dim": 128,
+            "num_heads": 8,
+            "attention_dropout_prob":0.2
+        },
     "modeling_layer": {
       "type": "lstm",
       "bidirectional": true,
@@ -76,7 +83,18 @@
       "num_layers": 1,
       "dropout": 0.2
     },
-    "dropout": 0.2
+    "dropout": 0.2,
+"initializer": [
+[ ".*_text_field_embedder.*|_highway_layer._layers.*|.*_phrase_layer.*|.*_matrix_attention.*",
+		      {
+		          "type": "pretrained",
+		          "weights_file_path": "./weights.th"
+		        }
+        ],
+[".*_coattention_layer.*_projection.*weight|.*_predictor.*weight|.*_modeling_layer.*weight|.*_span_end_encoder.*weight", {"type": "xavier_normal"}],
+[".*_coattention_layer.*_projection.*bias|.*_predictor.*bias|.*_modeling_layer.*bias|.*_span_end_encoder.*bias", {"type": "constant", "val": 0}]
+
+    ]
   },
   "iterator": {
     "type": "bucket",
