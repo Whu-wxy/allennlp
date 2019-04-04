@@ -69,7 +69,7 @@ class BidirectionalAttentionFlow_multico(Model):
                  num_highway_layers: int,
                  phrase_layer: Seq2SeqEncoder,
                  similarity_function: SimilarityFunction,
-                 multicoatt_layer: Seq2SeqEncoder,
+                 coattention_layer: Seq2SeqEncoder,
                  modeling_layer: Seq2SeqEncoder,
                  span_end_encoder: Seq2SeqEncoder,
                  dropout: float = 0.2,
@@ -83,7 +83,7 @@ class BidirectionalAttentionFlow_multico(Model):
                                                       num_highway_layers))
         self._phrase_layer = phrase_layer
         self._matrix_attention = LegacyMatrixAttention(similarity_function)
-        self._coattention_layer = multicoatt_layer
+        self._coattention_layer = coattention_layer
         self._modeling_layer = modeling_layer
         self._span_end_encoder = span_end_encoder
 
