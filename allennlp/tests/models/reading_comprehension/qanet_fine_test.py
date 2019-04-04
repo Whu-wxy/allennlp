@@ -14,8 +14,8 @@ from mymodel.QaNet_fine_grained import QaNet_fine_grained
 class QaNetFineTest(ModelTestCase):
     def setUp(self):
         super().setUp()
-        self.set_up_model('C:\\Users\\Administrator\\PycharmProjects\\allennlp\\mymodel\\qanet_fine.json',
-                          'F:\\dl-data\\datasets\\SQuAD\\dev-v1.1.json')
+        self.set_up_model('/home/ubuntu/MyFiles/nlp/config/qanet_fine.json',
+                          '/home/ubuntu/MyFiles/nlp/config/dev-v1.1.json')
 
     def test_forward_pass_runs_correctly(self):
         batch = Batch(self.instances)
