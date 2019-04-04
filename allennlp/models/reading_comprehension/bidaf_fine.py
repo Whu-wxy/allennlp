@@ -84,26 +84,27 @@ class BidirectionalAttentionFlow_multico(Model):
         self._phrase_layer = phrase_layer
         self._matrix_attention = LegacyMatrixAttention(similarity_function)
         self._coattention_layer = multicoatt_layer
+        self._projection_layer = torch.nn.Linear(multicoatt_layer.get_output_dim(), modeling_layer.get_input_dim())
         self._modeling_layer = modeling_layer
         self._span_end_encoder = span_end_encoder
 
         encoding_dim = phrase_layer.get_output_dim()
         modeling_dim = modeling_layer.get_output_dim()
-        span_start_input_dim = encoding_dim * 5 + modeling_dim
+        span_start_input_dim = encoding_dim * 4 + modeling_dim
         self._span_start_predictor = TimeDistributed(torch.nn.Linear(span_start_input_dim, 1))
 
         span_end_encoding_dim = span_end_encoder.get_output_dim()
-        span_end_input_dim = encoding_dim * 5 + span_end_encoding_dim
+        span_end_input_dim = encoding_dim * 4 + span_end_encoding_dim
         self._span_end_predictor = TimeDistributed(torch.nn.Linear(span_end_input_dim, 1))
 
         # Bidaf has lots of layer dimensions which need to match up - these aren't necessarily
         # obvious from the configuration files, so we check here.
-        check_dimensions_match(modeling_layer.get_input_dim(), 5 * encoding_dim,
-                               "modeling layer input dim", "5 * encoding dim")
+        check_dimensions_match(modeling_layer.get_input_dim(), 4 * encoding_dim,
+                               "modeling layer input dim", "4 * encoding dim")
         check_dimensions_match(text_field_embedder.get_output_dim(), phrase_layer.get_input_dim(),
                                "text field embedder output dim", "phrase layer input dim")
-        check_dimensions_match(span_end_encoder.get_input_dim(), 5 * encoding_dim + 3 * modeling_dim,
-                               "span end encoder input dim", "5 * encoding dim + 3 * modeling dim")
+        check_dimensions_match(span_end_encoder.get_input_dim(), 4 * encoding_dim + 3 * modeling_dim,
+                               "span end encoder input dim", "4 * encoding dim + 3 * modeling dim")
 
         self._span_start_accuracy = CategoricalAccuracy()
         self._span_end_accuracy = CategoricalAccuracy()
@@ -217,11 +218,13 @@ class BidirectionalAttentionFlow_multico(Model):
                                           encoded_passage * tiled_question_passage_vector,
                                           coattention_vectors],
                                          dim=-1)
+        # Shape: (batch_size, passage_length, encoding_dim * 4)
+        final_merged_passage = self._projection_layer(final_merged_passage)
 
         modeled_passage = self._dropout(self._modeling_layer(final_merged_passage, passage_lstm_mask))
         modeling_dim = modeled_passage.size(-1)
 
-        # Shape: (batch_size, passage_length, encoding_dim * 5 + modeling_dim))
+        # Shape: (batch_size, passage_length, encoding_dim * 4 + modeling_dim))
         span_start_input = self._dropout(torch.cat([final_merged_passage, modeled_passage], dim=-1))
         # Shape: (batch_size, passage_length)
         span_start_logits = self._span_start_predictor(span_start_input).squeeze(-1)
@@ -235,7 +238,7 @@ class BidirectionalAttentionFlow_multico(Model):
                                                                                    passage_length,
                                                                                    modeling_dim)
 
-        # Shape: (batch_size, passage_length, encoding_dim * 5 + modeling_dim * 3)
+        # Shape: (batch_size, passage_length, encoding_dim * 4 + modeling_dim * 3)
         span_end_representation = torch.cat([final_merged_passage,
                                              modeled_passage,
                                              tiled_start_representation,
@@ -244,7 +247,7 @@ class BidirectionalAttentionFlow_multico(Model):
         # Shape: (batch_size, passage_length, encoding_dim)
         encoded_span_end = self._dropout(self._span_end_encoder(span_end_representation,
                                                                 passage_lstm_mask))
-        # Shape: (batch_size, passage_length, encoding_dim * 5 + span_end_encoding_dim)
+        # Shape: (batch_size, passage_length, encoding_dim * 4 + span_end_encoding_dim)
         span_end_input = self._dropout(torch.cat([final_merged_passage, encoded_span_end], dim=-1))
         span_end_logits = self._span_end_predictor(span_end_input).squeeze(-1)
         span_end_probs = util.masked_softmax(span_end_logits, passage_mask)

@@ -63,14 +63,14 @@
         "coattention_layer": {
             "type": "multi_head_coattention4",
             "num_blocks": 1,
-            "input_dim": 128,
+            "input_dim": 200,
             "num_heads": 8,
             "attention_dropout_prob":0.2
         },
     "modeling_layer": {
       "type": "lstm",
       "bidirectional": true,
-      "input_size": 1000,
+      "input_size": 800,
       "hidden_size": 100,
       "num_layers": 2,
       "dropout": 0.2
@@ -78,21 +78,21 @@
     "span_end_encoder": {
       "type": "lstm",
       "bidirectional": true,
-      "input_size": 1600,
+      "input_size": 1400,
       "hidden_size": 100,
       "num_layers": 1,
       "dropout": 0.2
     },
     "dropout": 0.2,
 "initializer": [
-[ ".*_text_field_embedder.*|_highway_layer._layers.*|.*_phrase_layer.*|.*_matrix_attention.*",
+[ ".*_text_field_embedder.*|_highway_layer._layers.*|.*_phrase_layer.*|.*_matrix_attention.*|.*_span_end_encoder.*|.*_modeling_layer.*|.*_predictor.*",
 		      {
 		          "type": "pretrained",
 		          "weights_file_path": "./weights.th"
 		        }
         ],
-[".*_coattention_layer.*_projection.*weight|.*_predictor.*weight|.*_modeling_layer.*weight|.*_span_end_encoder.*weight", {"type": "xavier_normal"}],
-[".*_coattention_layer.*_projection.*bias|.*_predictor.*bias|.*_modeling_layer.*bias|.*_span_end_encoder.*bias", {"type": "constant", "val": 0}]
+[".*_coattention_layer.*_projection.*weight|_projection_layer.*weight", {"type": "xavier_normal"}],
+[".*_coattention_layer.*_projection.*bias.*bias|_projection_layer.*bias", {"type": "constant", "val": 0}]
 
     ]
   },
