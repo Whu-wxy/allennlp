@@ -106,6 +106,7 @@
     "num_epochs": 20,
     "grad_norm": 5.0,
     "patience": 10,
+    "should_log_learning_rate": true,
     "validation_metric": "+em",
     "cuda_device": 0,
     "learning_rate_scheduler": {
