@@ -91,8 +91,8 @@
 		          "weights_file_path": "./weights.th"
 		        }
         ],
-[".*_coattention_layer.*_projection.*weight|_projection_layer.*weight", {"type": "xavier_normal"}],
-[".*_coattention_layer.*_projection.*bias.*bias|_projection_layer.*bias", {"type": "constant", "val": 0}]
+//[".*_coattention_layer.*_projection.*weight|_projection_layer.*weight", {"type": "xavier_normal"}],
+//[".*_coattention_layer.*_projection.*bias.*bias|_projection_layer.*bias", {"type": "constant", "val": 0}]
 
     ]
   },
