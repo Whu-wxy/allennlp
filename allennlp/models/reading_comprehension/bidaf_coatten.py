@@ -17,8 +17,8 @@ from allennlp.training.metrics import BooleanAccuracy, CategoricalAccuracy, Squa
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-@Model.register("bidaf_multico")
-class BidirectionalAttentionFlow_multico(Model):
+@Model.register("bidaf_coatten")
+class BidirectionalAttentionFlow_coatten(Model):
     """
     This class implements Minjoon Seo's `Bidirectional Attention Flow model
     <https://www.semanticscholar.org/paper/Bidirectional-Attention-Flow-for-Machine-Seo-Kembhavi/7586b7cca1deba124af80609327395e613a20e9d>`_
@@ -76,7 +76,7 @@ class BidirectionalAttentionFlow_multico(Model):
                  mask_lstms: bool = True,
                  initializer: InitializerApplicator = InitializerApplicator(),
                  regularizer: Optional[RegularizerApplicator] = None) -> None:
-        super(BidirectionalAttentionFlow_multico, self).__init__(vocab, regularizer)
+        super(BidirectionalAttentionFlow_coatten, self).__init__(vocab, regularizer)
 
         self._text_field_embedder = text_field_embedder
         self._highway_layer = TimeDistributed(Highway(text_field_embedder.get_output_dim(),
@@ -84,7 +84,7 @@ class BidirectionalAttentionFlow_multico(Model):
         self._phrase_layer = phrase_layer
         self._matrix_attention = LegacyMatrixAttention(similarity_function)
         self._coattention_layer = coattention_layer
-        self._projection_layer = torch.nn.Linear(multicoatt_layer.get_output_dim(), modeling_layer.get_input_dim())
+        self._projection_layer = torch.nn.Linear(coattention_layer.get_output_dim(), modeling_layer.get_input_dim())
         self._modeling_layer = modeling_layer
         self._span_end_encoder = span_end_encoder
 
@@ -189,37 +189,44 @@ class BidirectionalAttentionFlow_multico(Model):
         # Shape: (batch_size, passage_length, question_length)
         passage_question_similarity = self._matrix_attention(encoded_passage, encoded_question)
         # Shape: (batch_size, passage_length, question_length)
-        passage_question_attention = util.masked_softmax(passage_question_similarity, question_mask)
+        passage_question_attention = masked_softmax(
+            passage_question_similarity,
+            question_mask,
+            memory_efficient=True)
         # Shape: (batch_size, passage_length, encoding_dim)
         passage_question_vectors = util.weighted_sum(encoded_question, passage_question_attention)
 
-        # We replace masked values with something really negative here, so they don't affect the
-        # max below.
-        masked_similarity = util.replace_masked_values(passage_question_similarity,
-                                                       question_mask.unsqueeze(1),
-                                                       -1e7)
-        # Shape: (batch_size, passage_length)
-        question_passage_similarity = masked_similarity.max(dim=-1)[0].squeeze(-1)
-        # Shape: (batch_size, passage_length)
-        question_passage_attention = util.masked_softmax(question_passage_similarity, passage_mask)
-        # Shape: (batch_size, encoding_dim)
-        question_passage_vector = util.weighted_sum(encoded_passage, question_passage_attention)
+        # Shape: (batch_size, question_length, passage_length)
+        question_passage_attention = masked_softmax(
+            passage_question_similarity.transpose(1, 2),
+            passage_mask,
+            memory_efficient=True)
+        # Shape: (batch_size, passage_length, passage_length)
+        attention_over_attention = torch.bmm(passage_question_attention, question_passage_attention)
         # Shape: (batch_size, passage_length, encoding_dim)
-        tiled_question_passage_vector = question_passage_vector.unsqueeze(1).expand(batch_size,
-                                                                                    passage_length,
-                                                                                    encoding_dim)
+        passage_passage_vectors = util.weighted_sum(encoded_passage, attention_over_attention)
 
-        coattention_vectors = self._coattention_layer(encoded_passage, encoded_question, passage_mask, question_mask)
+        # Shape: (batch_size, passage_length, encoding_dim * 4)
+        final_merged_passage = self._dropout(
+            torch.cat([encoded_passage, passage_question_vectors,
+                       encoded_passage * passage_question_vectors,
+                       encoded_passage * passage_passage_vectors],
+                      dim=-1)
+        )
+
+        # coattention_vectors = self._coattention_layer(encoded_passage, encoded_question, passage_mask, question_mask)
 
         # Shape: (batch_size, passage_length, encoding_dim * 5)
-        final_merged_passage = torch.cat([encoded_passage,
-                                          passage_question_vectors,
-                                          encoded_passage * passage_question_vectors,
-                                          encoded_passage * tiled_question_passage_vector,
-                                          coattention_vectors],
-                                         dim=-1)
+        # final_merged_passage = torch.cat([encoded_passage,
+        #                                   passage_question_vectors,
+        #                                   encoded_passage * passage_question_vectors,
+        #                                   encoded_passage * tiled_question_passage_vector,
+        #                                   coattention_vectors],
+        #                                  dim=-1)
+
+
         # Shape: (batch_size, passage_length, encoding_dim * 4)
-        final_merged_passage = self._projection_layer(final_merged_passage)
+        # final_merged_passage = self._projection_layer(final_merged_passage)
 
         modeled_passage = self._dropout(self._modeling_layer(final_merged_passage, passage_lstm_mask))
         modeling_dim = modeled_passage.size(-1)
