@@ -26,7 +26,9 @@ which to write the results.
      -f, --force           overwrite the output directory if it exists
      -o OVERRIDES, --overrides OVERRIDES
                            a JSON structure used to override the experiment
-                           configuration
+                           configuration,e.g.{\\"iterator.batch_size\\":16},
+                           the key means to recursively look for a key in
+                           the parameter file, each key is separated by "."
      --file-friendly-logging
                            outputs tqdm status on separate lines and slows tqdm
                            refresh rate
