@@ -10,3 +10,4 @@ from allennlp.data.dataset_readers.reading_comprehension.squad import SquadReade
 from allennlp.data.dataset_readers.reading_comprehension.quac import QuACReader
 from allennlp.data.dataset_readers.reading_comprehension.triviaqa import TriviaQaReader
 from allennlp.data.dataset_readers.reading_comprehension.qangaroo import QangarooReader
+from allennlp.data.dataset_readers.reading_comprehension.squad_filter import SquadReaderFilter
