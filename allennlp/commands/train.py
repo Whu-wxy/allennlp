@@ -79,7 +79,9 @@ class Train(Subcommand):
         subparser.add_argument('-o', '--overrides',
                                type=str,
                                default="",
-                               help='a JSON structure used to override the experiment configuration')
+                               help='a JSON structure used to override the experiment configuration,'
+                                    ',e.g.{\\"iterator.batch_size\\":16}, the key means to recursively '
+                                    'look for a key in the parameter file, each key is separated by "."')
 
         subparser.add_argument('--file-friendly-logging',
                                action='store_true',
