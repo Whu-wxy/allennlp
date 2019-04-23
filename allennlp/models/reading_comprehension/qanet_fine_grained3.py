@@ -195,7 +195,7 @@ class QaNet_fine_grained3(Model):
         elif self.training:
             passage_question_attention = None
 
-            # Shape: (batch_size, passage_length, encoding_dim * 4)
+            # Shape: (batch_size, passage_length, encoding_dim * 5)
         merged_passage_attention_vectors = self._dropout(
             torch.cat([encoded_passage, passage_question_vectors,
                        encoded_passage * passage_question_vectors,

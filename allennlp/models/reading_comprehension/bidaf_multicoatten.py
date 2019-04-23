@@ -18,8 +18,8 @@ from allennlp.nn.util import masked_softmax
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-@Model.register("bidaf_coatten")
-class BidirectionalAttentionFlow_coatten(Model):
+@Model.register("bidaf_multicoatten")
+class BidirectionalAttentionFlow_multicoatten(Model):
     """
     This class implements Minjoon Seo's `Bidirectional Attention Flow model
     <https://www.semanticscholar.org/paper/Bidirectional-Attention-Flow-for-Machine-Seo-Kembhavi/7586b7cca1deba124af80609327395e613a20e9d>`_
@@ -70,19 +70,22 @@ class BidirectionalAttentionFlow_coatten(Model):
                  num_highway_layers: int,
                  phrase_layer: Seq2SeqEncoder,
                  similarity_function: SimilarityFunction,
+                 coattention_layer: Seq2SeqEncoder,
                  modeling_layer: Seq2SeqEncoder,
                  span_end_encoder: Seq2SeqEncoder,
                  dropout: float = 0.2,
                  mask_lstms: bool = True,
                  initializer: InitializerApplicator = InitializerApplicator(),
                  regularizer: Optional[RegularizerApplicator] = None) -> None:
-        super(BidirectionalAttentionFlow_coatten, self).__init__(vocab, regularizer)
+        super(BidirectionalAttentionFlow_multicoatten, self).__init__(vocab, regularizer)
 
         self._text_field_embedder = text_field_embedder
         self._highway_layer = TimeDistributed(Highway(text_field_embedder.get_output_dim(),
                                                       num_highway_layers))
         self._phrase_layer = phrase_layer
         self._matrix_attention = LegacyMatrixAttention(similarity_function)
+        self._coattention_layer = coattention_layer
+        self._projection_layer = torch.nn.Linear(coattention_layer.get_output_dim()+phrase_layer.get_output_dim()*4, modeling_layer.get_input_dim())
         self._modeling_layer = modeling_layer
         self._span_end_encoder = span_end_encoder
 
@@ -211,6 +214,16 @@ class BidirectionalAttentionFlow_coatten(Model):
                        encoded_passage * passage_passage_vectors],
                       dim=-1)
         )
+
+        coattention_vectors = self._coattention_layer(encoded_passage, encoded_question, passage_mask, question_mask)
+
+        # Shape: (batch_size, passage_length, encoding_dim * 5)
+        final_merged_passage = torch.cat([final_merged_passage,
+                                          coattention_vectors],
+                                         dim=-1)
+
+        # Shape: (batch_size, passage_length, encoding_dim * 4)
+        final_merged_passage = self._projection_layer(final_merged_passage)
 
         modeled_passage = self._dropout(self._modeling_layer(final_merged_passage, passage_lstm_mask))
         modeling_dim = modeled_passage.size(-1)
