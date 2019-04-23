@@ -13,6 +13,7 @@ from allennlp.modules import Seq2SeqEncoder, SimilarityFunction, TimeDistributed
 from allennlp.modules.matrix_attention.legacy_matrix_attention import LegacyMatrixAttention
 from allennlp.nn import util, InitializerApplicator, RegularizerApplicator
 from allennlp.training.metrics import BooleanAccuracy, CategoricalAccuracy, SquadEmAndF1
+from allennlp.nn.util import masked_softmax
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
