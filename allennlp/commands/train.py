@@ -26,7 +26,9 @@ which to write the results.
      -f, --force           overwrite the output directory if it exists
      -o OVERRIDES, --overrides OVERRIDES
                            a JSON structure used to override the experiment
-                           configuration
+                           configuration,e.g.{\\"iterator.batch_size\\":16},
+                           the key means to recursively look for a key in
+                           the parameter file, each key is separated by "."
      --file-friendly-logging
                            outputs tqdm status on separate lines and slows tqdm
                            refresh rate
@@ -79,7 +81,9 @@ class Train(Subcommand):
         subparser.add_argument('-o', '--overrides',
                                type=str,
                                default="",
-                               help='a JSON structure used to override the experiment configuration')
+                               help='a JSON structure used to override the experiment configuration,'
+                                    ',e.g.{\\"iterator.batch_size\\":16}, the key means to recursively '
+                                    'look for a key in the parameter file, each key is separated by "."')
 
         subparser.add_argument('--file-friendly-logging',
                                action='store_true',
