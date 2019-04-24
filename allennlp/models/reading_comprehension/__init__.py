@@ -15,3 +15,5 @@ from allennlp.models.reading_comprehension.qanet_fine_grained3 import QaNet_fine
 from allennlp.models.reading_comprehension.qanet_pure_fine import QaNet_pure_fine
 from allennlp.models.reading_comprehension.bidaf_coatten import BidirectionalAttentionFlow_coatten
 from allennlp.models.reading_comprehension.bidaf_multicoatten import BidirectionalAttentionFlow_multicoatten
+from allennlp.models.reading_comprehension.qanet_pred import QaNet_pred
+from allennlp.models.reading_comprehension.qanet_pred2 import QaNet_pred2
