@@ -87,7 +87,7 @@ class Train(Subcommand):
 
         subparser.add_argument('--file-friendly-logging',
                                action='store_true',
-                               default=False,
+                               default=True,
                                help='outputs tqdm status on separate lines and slows tqdm refresh rate')
 
         subparser.add_argument('--cache-directory',
