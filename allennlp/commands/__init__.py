@@ -16,6 +16,7 @@ from allennlp.commands.subcommand import Subcommand
 from allennlp.commands.test_install import TestInstall
 from allennlp.commands.find_learning_rate import FindLearningRate
 from allennlp.commands.train import Train
+from allennlp.commands.print_results import PrintResults
 from allennlp.common.util import import_submodules
 from allennlp.commands.group_train import Group_Train
 
@@ -74,8 +75,12 @@ def main(prog: str = None,
             "dry-run": DryRun(),
             "test-install": TestInstall(),
             "find-lr": FindLearningRate(),
+<<<<<<< HEAD
             "group-train": Group_Train(),
 
+=======
+            "print-results": PrintResults(),
+>>>>>>> upstream/master
             # Superseded by overrides
             **subcommand_overrides
     }
