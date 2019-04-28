@@ -81,8 +81,8 @@ class QaNet_pred(Model):
         self._modeling_begin_layer = modeling_layer
         self._modeling_end_layer = modeling_layer
 
-        self._span_start_predictor = torch.nn.Linear(modeling_out_dim * 2, 1)
-        self._span_end_predictor = torch.nn.Linear(modeling_out_dim * 2, 1)
+        self._span_start_predictor = torch.nn.Linear(modeling_out_dim, 1)
+        self._span_end_predictor = torch.nn.Linear(modeling_out_dim, 1)
 
         self._span_start_accuracy = CategoricalAccuracy()
         self._span_end_accuracy = CategoricalAccuracy()

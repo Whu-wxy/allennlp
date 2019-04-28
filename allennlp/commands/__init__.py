@@ -75,12 +75,9 @@ def main(prog: str = None,
             "dry-run": DryRun(),
             "test-install": TestInstall(),
             "find-lr": FindLearningRate(),
-<<<<<<< HEAD
             "group-train": Group_Train(),
 
-=======
             "print-results": PrintResults(),
->>>>>>> upstream/master
             # Superseded by overrides
             **subcommand_overrides
     }
