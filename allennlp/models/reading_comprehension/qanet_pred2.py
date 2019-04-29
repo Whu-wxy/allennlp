@@ -78,6 +78,7 @@ class QaNet_pred2(Model):
 
         self._modeling_proj_layer = torch.nn.Linear(encoding_out_dim * 4, modeling_in_dim)
         self._modeling_layer = modeling_layer
+        self._modeling_outdim = modeling_out_dim
 
         self._span_start_predictor = torch.nn.Linear(modeling_out_dim/2, 1)
         self._span_end_predictor = torch.nn.Linear(modeling_out_dim/2, 1)
@@ -194,7 +195,7 @@ class QaNet_pred2(Model):
             modeled_passage = self._dropout(self._modeling_layer(modeled_passage, passage_mask))
 
         # Shape: (batch_size, passage_length, modeling_dim/2)
-        span_start_input, span_end_input = torch.split(modeled_passage, dim=-1)
+        span_start_input, span_end_input = torch.split(modeled_passage, self._modeling_outdim/2, dim=-1)
 
         # Shape: (batch_size, passage_length)
         span_start_logits = self._span_start_predictor(span_start_input).squeeze(-1)

@@ -17,3 +17,4 @@ from allennlp.models.reading_comprehension.bidaf_coatten import BidirectionalAtt
 from allennlp.models.reading_comprehension.bidaf_multicoatten import BidirectionalAttentionFlow_multicoatten
 from allennlp.models.reading_comprehension.qanet_pred import QaNet_pred
 from allennlp.models.reading_comprehension.qanet_pred2 import QaNet_pred2
+from allennlp.models.reading_comprehension.bidaf_sub import BidirectionalAttentionFlow_sub
