@@ -226,7 +226,7 @@ class BidirectionalAttentionFlow_add(Model):
         # Shape: (batch_size, passage_length)
         span_start_logits = self._span_start_predictor(span_start_input).squeeze(-1)
         # Shape: (batch_size, passage_length)
-        # 前面的层加载上一个模型，不适用softmax的输出
+        # 前面的层加载上一个模型，不使用softmax的输出
         span_start_probs = util.masked_softmax(span_start_logits, passage_mask)
 #################################################################
         #将begin的信息加入全文信息
@@ -260,16 +260,14 @@ class BidirectionalAttentionFlow_add(Model):
         tiled_end_representation = span_end_representation2.unsqueeze(1).expand(batch_size,
                                                                                    passage_length,
                                                                                    modeling_dim)
-        span_start_probs = span_start_probs.unsqueeze(1).expand(batch_size,
-                                                                                passage_length,
-                                                                                modeling_dim)
+        span_start_probs = span_start_probs.unsqueeze(1).expand(batch_size,passage_length,modeling_dim)
 
         # Shape: (batch_size, passage_length, encoding_dim * 4 + modeling_dim * 4)
         span_start_representation2 = torch.cat([final_merged_passage,
                                              modeled_passage,
                                                 tiled_end_representation,
                                              modeled_passage * tiled_end_representation,
-                                                span_start_probs],
+                                                tiled_start_representation],
                                             dim=-1)
         # Shape: (batch_size, passage_length, encoding_dim)
         encoded_span_begin = self._dropout(self._add_encoder(span_start_representation2,
