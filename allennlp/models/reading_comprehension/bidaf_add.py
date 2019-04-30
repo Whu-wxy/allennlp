@@ -260,7 +260,6 @@ class BidirectionalAttentionFlow_add(Model):
         tiled_end_representation = span_end_representation2.unsqueeze(1).expand(batch_size,
                                                                                    passage_length,
                                                                                    modeling_dim)
-        span_start_probs = span_start_probs.unsqueeze(1).expand(batch_size,passage_length,modeling_dim)
 
         # Shape: (batch_size, passage_length, encoding_dim * 4 + modeling_dim * 4)
         span_start_representation2 = torch.cat([final_merged_passage,
