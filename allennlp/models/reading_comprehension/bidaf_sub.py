@@ -82,13 +82,15 @@ class BidirectionalAttentionFlow_sub(Model):
         self._phrase_layer = phrase_layer
         self._matrix_attention = LegacyMatrixAttention(similarity_function)
         self._modeling_layer = modeling_layer
+        
 
         encoding_dim = phrase_layer.get_output_dim()
         modeling_dim = modeling_layer.get_output_dim()
-        span_start_input_dim = modeling_dim/2
+        span_start_input_dim = modeling_dim
+        self._model_pro_layer = torch.nn.Linear(modeling_dim, modeling_dim*2)
         self._span_start_predictor = TimeDistributed(torch.nn.Linear(span_start_input_dim, 1))
 
-        span_end_input_dim = modeling_dim/2
+        span_end_input_dim = modeling_dim
         self._span_end_predictor = TimeDistributed(torch.nn.Linear(span_end_input_dim, 1))
 
         # Bidaf has lots of layer dimensions which need to match up - these aren't necessarily
@@ -97,8 +99,6 @@ class BidirectionalAttentionFlow_sub(Model):
                                "modeling layer input dim", "4 * encoding dim")
         check_dimensions_match(text_field_embedder.get_output_dim(), phrase_layer.get_input_dim(),
                                "text field embedder output dim", "phrase layer input dim")
-        check_dimensions_match(span_end_encoder.get_input_dim(), 4 * encoding_dim + 3 * modeling_dim,
-                               "span end encoder input dim", "4 * encoding dim + 3 * modeling dim")
 
         self._span_start_accuracy = CategoricalAccuracy()
         self._span_end_accuracy = CategoricalAccuracy()
@@ -214,7 +214,9 @@ class BidirectionalAttentionFlow_sub(Model):
         modeled_passage = self._dropout(self._modeling_layer(final_merged_passage, passage_lstm_mask))
         modeling_dim = modeled_passage.size(-1)
 
-        span_start_input, span_end_input = torch.split(LSTMout, modeling_dim/2, dim=-1)
+        modeled_passage = self._model_pro_layer(modeled_passage)
+
+        span_start_input, span_end_input = torch.split(modeled_passage, modeling_dim, dim=-1)
 
         # Shape: (batch_size, passage_length)
         span_start_logits = self._span_start_predictor(span_start_input).squeeze(-1)
