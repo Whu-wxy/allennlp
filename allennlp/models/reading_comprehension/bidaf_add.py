@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional
 
 import torch
 from torch.nn.functional import nll_loss
-from torch.nn import LayerNorm
 
 from allennlp.common.checks import check_dimensions_match
 from allennlp.data import Vocabulary
@@ -82,17 +81,11 @@ class BidirectionalAttentionFlow_add(Model):
         self._text_field_embedder = text_field_embedder
         self._highway_layer = TimeDistributed(Highway(text_field_embedder.get_output_dim(),
                                                       num_highway_layers))
-
         self._phrase_layer = phrase_layer
         self._matrix_attention = LegacyMatrixAttention(similarity_function)
         self._modeling_layer = modeling_layer
         self._span_end_encoder = span_end_encoder
         self._add_encoder = add_encoder
-
-        self._phrase_norm_layer = LayerNorm(phrase_layer.get_input_dim())
-        self._modeling_norm_layer = LayerNorm(modeling_layer.get_input_dim())
-        self._span_end_norm_layer = LayerNorm(span_end_encoder.get_input_dim())
-        self._add_norm_layer = LayerNorm(add_encoder.get_input_dim())
 
         encoding_dim = phrase_layer.get_output_dim()
         modeling_dim = modeling_layer.get_output_dim()
@@ -191,7 +184,6 @@ class BidirectionalAttentionFlow_add(Model):
         question_lstm_mask = question_mask if self._mask_lstms else None
         passage_lstm_mask = passage_mask if self._mask_lstms else None
 
-        embedded_question = self._dropout(self._phrase_norm_layer(embedded_question))
         encoded_question = self._dropout(self._phrase_layer(embedded_question, question_lstm_mask))
         encoded_passage = self._dropout(self._phrase_layer(embedded_passage, passage_lstm_mask))
         encoding_dim = encoded_question.size(-1)
@@ -226,7 +218,6 @@ class BidirectionalAttentionFlow_add(Model):
                                           encoded_passage * tiled_question_passage_vector],
                                          dim=-1)
 
-        final_merged_passage = self._dropout(self._modeling_norm_layer(final_merged_passage))
         modeled_passage = self._dropout(self._modeling_layer(final_merged_passage, passage_lstm_mask))
         modeling_dim = modeled_passage.size(-1)
 
@@ -252,13 +243,16 @@ class BidirectionalAttentionFlow_add(Model):
                                              tiled_start_representation,
                                              modeled_passage * tiled_start_representation],
                                             dim=-1)
+
+        #HIGHWAY?
         # Shape: (batch_size, passage_length, encoding_dim)
-        span_end_representation = self._dropout(self._span_end_norm_layer(span_end_representation))
         encoded_span_end = self._dropout(self._span_end_encoder(span_end_representation,
                                                                 passage_lstm_mask))
 
         # Shape: (batch_size, passage_length, encoding_dim * 4 + span_end_encoding_dim)
         span_end_input = self._dropout(torch.cat([final_merged_passage, encoded_span_end], dim=-1))
+        
+        #HIGHWAY?
         span_end_logits = self._span_end_predictor(span_end_input).squeeze(-1)
         #预测end
         span_end_probs = util.masked_softmax(span_end_logits, passage_mask)
@@ -278,8 +272,8 @@ class BidirectionalAttentionFlow_add(Model):
                                              modeled_passage * tiled_end_representation,
                                                 tiled_start_representation],
                                             dim=-1)
+         #HIGHWAY?
         # Shape: (batch_size, passage_length, encoding_dim)
-        span_start_representation2 = self._dropout(self._add_norm_layer(span_start_representation2))
         encoded_span_begin = self._dropout(self._add_encoder(span_start_representation2,
                                                                 passage_lstm_mask))
 
