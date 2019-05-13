@@ -20,3 +20,4 @@ from allennlp.models.reading_comprehension.qanet_pred2 import QaNet_pred2
 from allennlp.models.reading_comprehension.bidaf_sub import BidirectionalAttentionFlow_sub
 from allennlp.models.reading_comprehension.bidaf_add import BidirectionalAttentionFlow_add
 from allennlp.models.reading_comprehension.qanet_fine_grained3_high import QaNet_fine_grained3_high
+from allennlp.models.reading_comprehension.bidaf_co_highway import BidirectionalAttentionFlow_co_highway
