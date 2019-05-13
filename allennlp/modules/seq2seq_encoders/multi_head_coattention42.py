@@ -6,6 +6,8 @@ from allennlp.nn.util import masked_softmax, weighted_sum
 from allennlp.modules.seq2seq_encoders.seq2seq_encoder import Seq2SeqEncoder
 from allennlp.modules import Highway
 
+#去掉最后的relu和跳层连接
+
 @Seq2SeqEncoder.register("multi_head_coattention42")
 class MultiHeadCoAttention42(Seq2SeqEncoder):
     # pylint: disable=line-too-long

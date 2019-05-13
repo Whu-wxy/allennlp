@@ -85,6 +85,8 @@ class BidirectionalAttentionFlow_multicoatten(Model):
         self._phrase_layer = phrase_layer
         self._matrix_attention = LegacyMatrixAttention(similarity_function)
         self._coattention_layer = coattention_layer
+        self._atten_highway_layer = TimeDistributed(Highway(coattention_layer.get_output_dim()+phrase_layer.get_output_dim()*4,
+                                                      num_highway_layers))
         self._projection_layer = torch.nn.Linear(coattention_layer.get_output_dim()+phrase_layer.get_output_dim()*4, modeling_layer.get_input_dim())
         self._modeling_layer = modeling_layer
         self._span_end_encoder = span_end_encoder
@@ -222,6 +224,7 @@ class BidirectionalAttentionFlow_multicoatten(Model):
                                           coattention_vectors],
                                          dim=-1)
 
+        final_merged_passage = self._atten_highway_layer(final_merged_passage)
         # Shape: (batch_size, passage_length, encoding_dim * 4)
         final_merged_passage = self._projection_layer(final_merged_passage)
 
