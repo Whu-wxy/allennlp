@@ -208,7 +208,6 @@ class QaNet_fine_grained3_high(Model):
                       dim=-1)
         )
 
-        merged_passage_attention_vectors = self._atten_high_norm_layer(merged_passage_attention_vectors)
         merged_passage_attention_vectors = self._atten_high_layer(merged_passage_attention_vectors)
         
         modeled_passage_list = [self._modeling_proj_layer(merged_passage_attention_vectors)]
