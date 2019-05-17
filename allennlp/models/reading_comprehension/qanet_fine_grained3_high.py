@@ -82,7 +82,6 @@ class QaNet_fine_grained3_high(Model):
         self._multihead_coattention_layer = coattention_layer
 
         # 7d->d
-        self._atten_high_norm_layer = LayerNorm(coatt_out_dim+phrase_out_dim*4)
         self._atten_high_layer = Highway(coatt_out_dim+phrase_out_dim*4, atten_high_num)
         self._modeling_proj_layer = torch.nn.Linear(coatt_out_dim+phrase_out_dim*4, modeling_in_dim)
         
