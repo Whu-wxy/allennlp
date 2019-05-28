@@ -73,8 +73,8 @@ class QaNetEncoder(Seq2SeqEncoder):
         else:
             self._input_projection_layer = lambda x: x
 
+
         self._blocks = []
-        self._encoder_blocks = ModuleList([])
         for _ in range(num_blocks):
             encoder_block = QaNetEncoderBlock(hidden_dim,
                                               hidden_dim,
@@ -89,6 +89,7 @@ class QaNetEncoder(Seq2SeqEncoder):
                                               attention_dropout_prob)
             self.add_module(f"encoder_block_{_}", encoder_block)
             self._blocks.append(encoder_block)
+
 
         self._input_dim = input_dim
         self._output_dim = hidden_dim
