@@ -215,3 +215,48 @@ class BertBasicWordSplitter(WordSplitter):
     @overrides
     def split_words(self, sentence: str) -> List[Token]:
         return [Token(text) for text in self.basic_tokenizer.tokenize(sentence)]
+
+
+
+@WordSplitter.register('thunlp')
+class THUNLPSplitter(WordSplitter):
+    """
+    A ``WordSplitter`` that uses THUNLP's tokenizer. To Split Chinese sentences.
+    simplify:Convert traditional characters to simplified characters
+    filt:Remove meaningless words
+
+    """
+    import thulac
+    def __init__(self,
+                 pos_tags: bool = False,
+                 simplify: bool = False,
+                 filt: bool = False,
+                 ner: bool = False,
+                 only_tokens: bool = True,
+                 user_dict) -> None:
+        self.thunlp = thulac.thulac(seg_only=pos_tags, T2S=simplify, filt=filt)
+        self._only_tokens = only_tokens
+
+    def _sanitize(self, tokens: List[str]) -> List[Token]:
+        """
+        Converts spaCy tokens to allennlp tokens. Is a no-op if
+        keep_spacy_tokens is True
+        """
+        sanitize_tokens = []
+        for token_attri in tokens:
+            token = Token(token_attri[0])
+            if self._only_tokens:
+                pass
+            else:
+                token.pos_ = token_attri[1]
+            sanitize_tokens.append(token)
+        return sanitize_tokens
+
+    @overrides
+    def batch_split_words(self, sentences: List[str]) -> List[List[Token]]:
+        return [self._sanitize(tokens)
+                for tokens in self.thunlp.cut(sentences, text=False)]
+
+    @overrides
+    def split_words(self, sentence: str) -> List[Token]:
+        return self._sanitize(self.thunlp.cut(sentence, text=False))
