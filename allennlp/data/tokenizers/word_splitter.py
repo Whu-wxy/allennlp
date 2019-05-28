@@ -226,14 +226,13 @@ class THUNLPSplitter(WordSplitter):
     filt:Remove meaningless words
 
     """
-    import thulac
-    def __init__(self,
-                 pos_tags: bool = False,
+    #import thulac
+    def __init__(self,pos_tags: bool = False,
                  simplify: bool = False,
                  filt: bool = False,
                  ner: bool = False,
                  only_tokens: bool = True,
-                 user_dict) -> None:
+                 user_dict: List[str] = None) -> None:
         self.thunlp = thulac.thulac(seg_only=pos_tags, T2S=simplify, filt=filt)
         self._only_tokens = only_tokens
 
