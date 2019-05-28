@@ -18,6 +18,8 @@ from allennlp.nn.util import masked_softmax
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
+#coattention+highway
+
 @Model.register("bidaf_co_highway")
 class BidirectionalAttentionFlow_co_highway(Model):
     """
