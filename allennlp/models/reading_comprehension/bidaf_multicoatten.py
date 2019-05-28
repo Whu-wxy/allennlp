@@ -17,6 +17,7 @@ from allennlp.nn.util import masked_softmax
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
+#multico+highway
 
 @Model.register("bidaf_multicoatten")
 class BidirectionalAttentionFlow_multicoatten(Model):
