@@ -39,9 +39,6 @@ from allennlp.modules.seq2seq_encoders.multi_head_self_attention import MultiHea
 from allennlp.modules.seq2seq_encoders.pass_through_encoder import PassThroughEncoder
 from allennlp.modules.seq2seq_encoders.feedforward_encoder import FeedForwardEncoder
 from allennlp.modules.seq2seq_encoders.qanet_encoder import QaNetEncoder
-from allennlp.modules.seq2seq_encoders.multi_head_coattention import MultiHeadCoAttention
-from allennlp.modules.seq2seq_encoders.stacked_coattention import StackedCoattentionEncoder
-from allennlp.modules.seq2seq_encoders.multi_head_coattention2 import MultiHeadCoAttention2
 from allennlp.modules.seq2seq_encoders.multi_head_coattention3 import MultiHeadCoAttention3
 from allennlp.modules.seq2seq_encoders.multi_head_coattention4 import MultiHeadCoAttention4
 from allennlp.modules.seq2seq_encoders.multi_head_coattention42 import MultiHeadCoAttention42
