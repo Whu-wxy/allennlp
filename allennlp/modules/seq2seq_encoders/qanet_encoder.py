@@ -73,7 +73,8 @@ class QaNetEncoder(Seq2SeqEncoder):
         else:
             self._input_projection_layer = lambda x: x
 
-        self._encoder_blocks = []
+
+        self._blocks = []
         for _ in range(num_blocks):
             encoder_block = QaNetEncoderBlock(hidden_dim,
                                               hidden_dim,
@@ -87,7 +88,8 @@ class QaNetEncoder(Seq2SeqEncoder):
                                               layer_dropout_undecayed_prob,
                                               attention_dropout_prob)
             self.add_module(f"encoder_block_{_}", encoder_block)
-            self._encoder_blocks.append(encoder_block)
+            self._blocks.append(encoder_block)
+
 
         self._input_dim = input_dim
         self._output_dim = hidden_dim
@@ -108,7 +110,7 @@ class QaNetEncoder(Seq2SeqEncoder):
     def forward(self, inputs: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:  # pylint: disable=arguments-differ
         inputs = self._input_projection_layer(inputs)
         output = inputs
-        for encoder_block in self._encoder_blocks:
+        for encoder_block in self._blocks:
             output = encoder_block(output, mask)
         return output
 
