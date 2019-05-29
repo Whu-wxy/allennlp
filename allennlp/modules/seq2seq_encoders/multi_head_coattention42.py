@@ -44,7 +44,7 @@ class MultiHeadCoAttention42(Seq2SeqEncoder):
         self._input_dim = input_dim
         self._output_dim = input_dim
 
-        self._coattention_blocks: List[MultiHeadCoAttention_block42] = []
+        self._coattention_blocks = []
         for block_index in range(num_blocks):
             coattention_block = MultiHeadCoAttention_block42(num_heads,
                                                              input_dim,
