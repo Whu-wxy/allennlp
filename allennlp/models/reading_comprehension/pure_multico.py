@@ -63,8 +63,6 @@ class PureMultiCo(Model):
 
         self._multihead_coattention_layer = coattention_layer
 
-        self._modeling_proj_layer = torch.nn.Linear(coatt_out_dim + phrase_out_dim * 4, modeling_in_dim)
-
         self._span_predictor = torch.nn.Linear(coatt_out_dim, 2)
 
         self._span_start_accuracy = CategoricalAccuracy()
@@ -134,8 +132,8 @@ class PureMultiCo(Model):
 
         embedded_question = self._dropout(self._text_field_embedder(question))
         embedded_passage = self._dropout(self._text_field_embedder(passage))
-        embedded_question = self._highway_layer(self._embedding_proj_layer(embedded_question))
-        embedded_passage = self._highway_layer(self._embedding_proj_layer(embedded_passage))
+        embedded_question = self._highway_layer(embedded_question)
+        embedded_passage = self._highway_layer(embedded_passage)
 
         batch_size = embedded_question.size(0)
 
