@@ -43,6 +43,7 @@ from allennlp.modules.seq2seq_encoders.multi_head_coattention3 import MultiHeadC
 from allennlp.modules.seq2seq_encoders.multi_head_coattention4 import MultiHeadCoAttention4
 from allennlp.modules.seq2seq_encoders.multi_head_coattention42 import MultiHeadCoAttention42
 from allennlp.modules.seq2seq_encoders.multi_head_coattention43 import MultiHeadCoAttention43
+from allennlp.modules.seq2seq_encoders.multi_head_coattention44 import MultiHeadCoAttention44
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 

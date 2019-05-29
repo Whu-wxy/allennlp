@@ -9,8 +9,8 @@ from allennlp.modules.seq2seq_encoders.seq2seq_encoder import Seq2SeqEncoder
 from allennlp.modules import Highway
 from torch.nn.functional import relu
 
-@Seq2SeqEncoder.register("multi_head_coattention43")
-class MultiHeadCoAttention43(Seq2SeqEncoder):
+@Seq2SeqEncoder.register("multi_head_coattention44")
+class MultiHeadCoAttention44(Seq2SeqEncoder):
     # pylint: disable=line-too-long
     """
     This class implements the key-value scaled dot product attention mechanism
@@ -39,7 +39,7 @@ class MultiHeadCoAttention43(Seq2SeqEncoder):
                  num_heads: int,
                  input_dim: int,
                  attention_dropout_prob: float = 0.1) -> None:
-        super(MultiHeadCoAttention43, self).__init__()
+        super(MultiHeadCoAttention44, self).__init__()
 
         self._num_heads = num_heads
         self._input_dim = input_dim
@@ -47,7 +47,7 @@ class MultiHeadCoAttention43(Seq2SeqEncoder):
 
         self._coattention_blocks = []
         for block_index in range(num_blocks):
-            coattention_block = MultiHeadCoAttention_block43(num_heads,
+            coattention_block = MultiHeadCoAttention_block44(num_heads,
                                                              input_dim,
                                                              attention_dropout_prob)
             self.add_module(f"coattention_block_{block_index}", coattention_block)
@@ -80,8 +80,8 @@ class MultiHeadCoAttention43(Seq2SeqEncoder):
 
 
 
-@Seq2SeqEncoder.register("multi_head_coattention_block43")
-class MultiHeadCoAttention_block43(Seq2SeqEncoder):
+@Seq2SeqEncoder.register("multi_head_coattention_block44")
+class MultiHeadCoAttention_block44(Seq2SeqEncoder):
     # pylint: disable=line-too-long
     """
     This class implements the key-value scaled dot product attention mechanism
@@ -110,7 +110,7 @@ class MultiHeadCoAttention_block43(Seq2SeqEncoder):
                  input_dim: int,
                  use_positional_encoding: bool = True,
                  attention_dropout_prob: float = 0.1) -> None:
-        super(MultiHeadCoAttention_block43, self).__init__()
+        super(MultiHeadCoAttention_block44, self).__init__()
 
         self._num_heads = num_heads
         self._input_dim = input_dim
@@ -124,12 +124,12 @@ class MultiHeadCoAttention_block43(Seq2SeqEncoder):
         #self._combined_projection = Linear(input_dim, 2 * input_dim + values_dim)
         self._combined_projection = Linear(input_dim, 2 * input_dim)  # Query & Value
 
-        self._output_projection = FeedForward(input_dim*3,
+        self._output_projection = FeedForward(input_dim*4,
                                  activations=[Activation.by_name('relu')(), Activation.by_name('linear')()],
-                                 hidden_dims=[input_dim*3, input_dim], num_layers=2, dropout=attention_dropout_prob)
+                                 hidden_dims=[input_dim*4, input_dim], num_layers=2, dropout=attention_dropout_prob)
 
         self._norm_layer = LayerNorm(input_dim)
-        self._merged_norm_layer = LayerNorm(input_dim*3)
+        self._merged_norm_layer = LayerNorm(input_dim*4)
         self._out_norm_layer = LayerNorm(input_dim)
 
         self._scale = (input_dim // num_heads) ** 0.5
@@ -245,7 +245,8 @@ class MultiHeadCoAttention_block43(Seq2SeqEncoder):
         passage_question_vectors = passage_question_vectors.view(batch_size, passage_length, self._input_dim)
 
         #[QAd;P*QAd;P*AqAd]
-        merged_passage_attention_vectors = self._merged_norm_layer(torch.cat([passage_question_vectors,
+        merged_passage_attention_vectors = self._merged_norm_layer(torch.cat([passage_tensor,
+                        passage_question_vectors,
                        passage_tensor * passage_question_vectors,
                        passage_tensor * passage_passage_vectors],
                       dim=-1))

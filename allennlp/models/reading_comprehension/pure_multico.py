@@ -46,6 +46,7 @@ class PureMultiCo(Model):
     def __init__(self, vocab: Vocabulary,
                  text_field_embedder: TextFieldEmbedder,
                  num_highway_layers: int,
+
                  coattention_layer: Seq2SeqEncoder,
                  dropout_prob: float = 0.1,
                  initializer: InitializerApplicator = InitializerApplicator(),
