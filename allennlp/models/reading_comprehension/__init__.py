@@ -22,3 +22,4 @@ from allennlp.models.reading_comprehension.bidaf_add import BidirectionalAttenti
 from allennlp.models.reading_comprehension.qanet_fine_grained3_high import QaNet_fine_grained3_high
 from allennlp.models.reading_comprehension.bidaf_co_highway import BidirectionalAttentionFlow_co_highway
 from allennlp.models.reading_comprehension.pure_multico import PureMultiCo
+from allennlp.models.reading_comprehension.naqanet_multico import NumericallyAugmentedQaNet_Multico
