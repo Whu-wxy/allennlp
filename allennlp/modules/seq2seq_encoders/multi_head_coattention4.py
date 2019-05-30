@@ -6,6 +6,7 @@ from allennlp.nn.util import masked_softmax, weighted_sum
 from allennlp.modules.seq2seq_encoders.seq2seq_encoder import Seq2SeqEncoder
 from allennlp.modules import Highway
 from torch.nn.functional import relu
+from allennlp.nn.util import add_positional_features
 
 @Seq2SeqEncoder.register("multi_head_coattention4")
 class MultiHeadCoAttention4(Seq2SeqEncoder):
@@ -106,12 +107,14 @@ class MultiHeadCoAttention_block4(Seq2SeqEncoder):
     def __init__(self,
                  num_heads: int,
                  input_dim: int,
+                 use_positional_encoding: bool = True,
                  attention_dropout_prob: float = 0.1) -> None:
         super(MultiHeadCoAttention_block4, self).__init__()
 
         self._num_heads = num_heads
         self._input_dim = input_dim
         self._output_dim = input_dim
+        self._use_positional_encoding = use_positional_encoding
 
         if input_dim % num_heads != 0:
             raise ValueError(f"Key size ({input_dim}) must be divisible by the number of "
@@ -166,6 +169,9 @@ class MultiHeadCoAttention_block4(Seq2SeqEncoder):
             passage_mask = passage_tensor.new_ones(batch_size, passage_length)
         if question_mask is None:
             question_mask = question_tensor.new_ones(batch_size, question_length)
+
+        if self._use_positional_encoding:
+            passage_tensor = add_positional_features(passage_tensor)
 
         # Shape (batch_size, passage, 2 * input_dim)
         combined_projection = self._norm_layer(passage_tensor)

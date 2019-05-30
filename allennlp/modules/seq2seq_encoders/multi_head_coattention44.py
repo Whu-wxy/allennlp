@@ -8,6 +8,7 @@ from allennlp.nn.util import masked_softmax, weighted_sum
 from allennlp.modules.seq2seq_encoders.seq2seq_encoder import Seq2SeqEncoder
 from allennlp.modules import Highway
 from torch.nn.functional import relu
+from allennlp.nn.util import add_positional_features
 
 @Seq2SeqEncoder.register("multi_head_coattention44")
 class MultiHeadCoAttention44(Seq2SeqEncoder):
