@@ -224,16 +224,19 @@ class THUNLPSplitter(WordSplitter):
     A ``WordSplitter`` that uses THUNLP's tokenizer. To Split Chinese sentences.
     simplify:Convert traditional characters to simplified characters
     filt:Remove meaningless words
-
+    user_dict:a txt file, one word in a line.
     """
-    #import thulac
     def __init__(self,pos_tags: bool = False,
                  simplify: bool = False,
                  filt: bool = False,
-                 ner: bool = False,
                  only_tokens: bool = True,
                  user_dict: List[str] = None) -> None:
-        self.thunlp = thulac.thulac(seg_only=pos_tags, T2S=simplify, filt=filt)
+        import thulac
+        if pos_tags:
+            seg_only = False
+        else:
+            seg_only = True
+        self.thunlp = thulac.thulac(seg_only=seg_only, T2S=simplify, filt=filt, user_dict=user_dict)
         self._only_tokens = only_tokens
 
     def _sanitize(self, tokens: List[str]) -> List[Token]:
@@ -247,14 +250,22 @@ class THUNLPSplitter(WordSplitter):
             if self._only_tokens:
                 pass
             else:
-                token.pos_ = token_attri[1]
+                token = Token(token.text,
+                              token.idx,
+                              token.lemma_,
+                              token_attri[1],
+                              token.tag_,
+                              token.dep_,
+                              token.ent_type_)
             sanitize_tokens.append(token)
         return sanitize_tokens
 
     @overrides
     def batch_split_words(self, sentences: List[str]) -> List[List[Token]]:
-        return [self._sanitize(tokens)
-                for tokens in self.thunlp.cut(sentences, text=False)]
+        split_words = []
+        for sent in sentences:
+            split_words.append(self._sanitize(tokens) for tokens in self.thunlp.cut(sent, text=False))
+        return split_words
 
     @overrides
     def split_words(self, sentence: str) -> List[Token]:
