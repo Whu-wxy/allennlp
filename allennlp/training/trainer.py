@@ -3,10 +3,9 @@ import logging
 import math
 import os
 import time
-import re
 import datetime
 import traceback
-from typing import Dict, Optional, List, Tuple, Union, Iterable, Any, NamedTuple
+from typing import Dict, Optional, List, Tuple, Union, Iterable, Any
 
 import torch
 import torch.optim.lr_scheduler
@@ -14,11 +13,10 @@ import torch.optim.lr_scheduler
 from allennlp.common import Params
 from allennlp.common.checks import ConfigurationError, parse_cuda_device
 from allennlp.common.util import (dump_metrics, gpu_memory_mb, peak_memory_mb,
-                                  get_frozen_and_tunable_parameter_names, lazy_groups_of)
+                                  lazy_groups_of)
 from allennlp.common.tqdm import Tqdm
 from allennlp.data.instance import Instance
 from allennlp.data.iterators.data_iterator import DataIterator, TensorDict
-from allennlp.data.vocabulary import Vocabulary
 from allennlp.models.model import Model
 from allennlp.nn import util as nn_util
 from allennlp.training.checkpointer import Checkpointer
@@ -62,8 +60,7 @@ class Trainer(TrainerBase):
                  should_log_parameter_statistics: bool = True,
                  should_log_learning_rate: bool = False,
                  log_batch_size_period: Optional[int] = None,
-                 moving_average: Optional[MovingAverage] = None,
-                 email: List = None) -> None:
+                 moving_average: Optional[MovingAverage] = None) -> None:
         """
         A trainer for doing supervised learning. It just takes a labeled dataset
         and a ``DataIterator``, and uses the supplied ``Optimizer`` to learn the weights
@@ -242,8 +239,6 @@ class Trainer(TrainerBase):
         self._log_batch_size_period = log_batch_size_period
 
         self._last_log = 0.0  # time of last logging
-
-        self._email = email
 
         # Enable activation logging.
         if histogram_interval is not None:
@@ -559,9 +554,6 @@ class Trainer(TrainerBase):
         if best_model_state:
             self.model.load_state_dict(best_model_state)
 
-        # send Email after train
-        self.sendEmail(str(metrics))
-
         return metrics
 
     def _save_checkpoint(self, epoch: Union[int, str]) -> None:
@@ -750,134 +742,3 @@ class Trainer(TrainerBase):
                    should_log_learning_rate=should_log_learning_rate,
                    log_batch_size_period=log_batch_size_period,
                    moving_average=moving_average)
-
-    def sendEmail(self, msg : str=None):
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.utils import formataddr
-
-        my_sender = ""
-        my_pass = ""
-        my_user = ""
-        if self._email == None:
-            my_sender = '641645560@qq.com'
-            my_pass = 'kybizypkzjicbbjf'
-            my_user = '641645560@qq.com'
-        elif len(self._email) == 2:
-            my_sender = self._email[0]    # 发件人邮箱账号
-            my_pass = self._email[1]      # 发件人邮箱密码
-            my_user = self._email[0]      # 收件人邮箱账号，我这边发送给自己
-        elif len(self._email) == 1:
-            logger.info("lack email parameter! It consists of sender address and passward.")
-            return
-
-        if msg == None:
-            msg = "finish train"
-
-        def mail():
-            ret=True
-            try:
-                msgsend=MIMEText(msg,'plain','utf-8')
-                msgsend['From']=formataddr(["wxy",my_sender])  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
-                msgsend['To']=formataddr(["name",my_user])     # 括号里的对应收件人邮箱昵称、收件人邮箱账号
-                msgsend['Subject']="AllenNLP Result"         # 邮件的主题，也可以说是标题
-
-                server=smtplib.SMTP_SSL("smtp.qq.com", 465)  # 发件人邮箱中的SMTP服务器，端口是25
-                server.login(my_sender, my_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
-                server.sendmail(my_sender,[my_user,],msgsend.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
-                server.quit()  # 关闭连接
-            except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
-                ret=False
-            return ret
-
-        ret=mail()
-        if ret:
-            logger.info("email successed")
-        else:
-            logger.info("email failed")
-
-
-class TrainerPieces(NamedTuple):
-    """
-    We would like to avoid having complex instantiation logic taking place
-    in `Trainer.from_params`. This helper class has a `from_params` that
-    instantiates a model, loads train (and possibly validation and test) datasets,
-    constructs a Vocabulary, creates data iterators, and handles a little bit
-    of bookkeeping. If you're creating your own alternative training regime
-    you might be able to use this.
-    """
-    model: Model
-    iterator: DataIterator
-    train_dataset: Iterable[Instance]
-    validation_dataset: Iterable[Instance]
-    test_dataset: Iterable[Instance]
-    validation_iterator: DataIterator
-    params: Params
-
-    @staticmethod
-    def from_params(params: Params,
-                    serialization_dir: str,
-                    recover: bool = False,
-                    cache_directory: str = None,
-                    cache_prefix: str = None) -> 'TrainerPieces':
-        all_datasets = training_util.datasets_from_params(params, cache_directory, cache_prefix)
-        datasets_for_vocab_creation = set(params.pop("datasets_for_vocab_creation", all_datasets))
-
-        for dataset in datasets_for_vocab_creation:
-            if dataset not in all_datasets:
-                raise ConfigurationError(f"invalid 'dataset_for_vocab_creation' {dataset}")
-
-        logger.info("From dataset instances, %s will be considered for vocabulary creation.",
-                    ", ".join(datasets_for_vocab_creation))
-
-        if recover and os.path.exists(os.path.join(serialization_dir, "vocabulary")):
-            vocab = Vocabulary.from_files(os.path.join(serialization_dir, "vocabulary"))
-            params.pop("vocabulary", {})
-        else:
-            vocab = Vocabulary.from_params(
-                    params.pop("vocabulary", {}),
-                    (instance for key, dataset in all_datasets.items()
-                     for instance in dataset
-                     if key in datasets_for_vocab_creation)
-            )
-
-        model = Model.from_params(vocab=vocab, params=params.pop('model'))
-
-        # If vocab extension is ON for training, embedding extension should also be
-        # done. If vocab and embeddings are already in sync, it would be a no-op.
-        model.extend_embedder_vocab()
-
-        # Initializing the model can have side effect of expanding the vocabulary
-        vocab.save_to_files(os.path.join(serialization_dir, "vocabulary"))
-
-        iterator = DataIterator.from_params(params.pop("iterator"))
-        iterator.index_with(model.vocab)
-        validation_iterator_params = params.pop("validation_iterator", None)
-        if validation_iterator_params:
-            validation_iterator = DataIterator.from_params(validation_iterator_params)
-            validation_iterator.index_with(model.vocab)
-        else:
-            validation_iterator = None
-
-        train_data = all_datasets['train']
-        validation_data = all_datasets.get('validation')
-        test_data = all_datasets.get('test')
-
-        trainer_params = params.pop("trainer")
-        no_grad_regexes = trainer_params.pop("no_grad", ())
-        for name, parameter in model.named_parameters():
-            if any(re.search(regex, name) for regex in no_grad_regexes):
-                parameter.requires_grad_(False)
-
-        frozen_parameter_names, tunable_parameter_names = \
-                    get_frozen_and_tunable_parameter_names(model)
-        logger.info("Following parameters are Frozen  (without gradient):")
-        for name in frozen_parameter_names:
-            logger.info(name)
-        logger.info("Following parameters are Tunable (with gradient):")
-        for name in tunable_parameter_names:
-            logger.info(name)
-
-        return TrainerPieces(model, iterator,
-                             train_data, validation_data, test_data,
-                             validation_iterator, trainer_params)
