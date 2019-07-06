@@ -1,5 +1,6 @@
 import re
 from typing import List, Optional
+import os
 
 from overrides import overrides
 import spacy
@@ -223,7 +224,7 @@ class BertBasicWordSplitter(WordSplitter):
         return [Token(text) for text in self.basic_tokenizer.tokenize(sentence)]
 
 
-
+import thulac
 @WordSplitter.register('thunlp')
 class THUNLPSplitter(WordSplitter):
     """
@@ -236,13 +237,15 @@ class THUNLPSplitter(WordSplitter):
                  simplify: bool = False,
                  filt: bool = False,
                  only_tokens: bool = True,
-                 user_dict: List[str] = None) -> None:
-        import thulac
+                 user_dict: str = None) -> None:
         if pos_tags:
             seg_only = False
         else:
             seg_only = True
-        self.thunlp = thulac.thulac(seg_only=seg_only, T2S=simplify, filt=filt, user_dict=user_dict)
+        if os.path.exists(user_dict):
+            self.thunlp = thulac.thulac(seg_only=seg_only, T2S=simplify, filt=filt, user_dict=user_dict)
+        else:
+            self.thunlp = thulac.thulac(seg_only=seg_only, T2S=simplify, filt=filt)
         self._only_tokens = only_tokens
 
     def _sanitize(self, tokens: List[str]) -> List[Token]:
@@ -276,3 +279,64 @@ class THUNLPSplitter(WordSplitter):
     @overrides
     def split_words(self, sentence: str) -> List[Token]:
         return self._sanitize(self.thunlp.cut(sentence, text=False))
+
+import jieba.posseg as poss
+import jieba
+@WordSplitter.register('jieba')
+class JIEBASplitter(WordSplitter):
+    """
+    A ``WordSplitter`` that uses JIEBA's tokenizer. To Split Chinese sentences.
+    user_dict:a txt file, one word in a line.
+    """
+    def __init__(self,pos_tags: bool = False,
+                 only_tokens: bool = True,
+                 user_dict: str = None) -> None:
+        self._pos_tags = pos_tags
+
+        if user_dict and os.path.exists(user_dict):
+            jieba.load_userdict(user_dict)
+        self._only_tokens = only_tokens
+
+    def _sanitize(self, tokens) -> List[Token]:
+        """
+        Converts spaCy tokens to allennlp tokens. Is a no-op if
+        keep_spacy_tokens is True
+        """
+        sanitize_tokens = []
+        if self._pos_tags:
+            for text, pos in tokens:
+                token = Token(text)
+                if self._only_tokens:
+                    pass
+                else:
+                    token = Token(token.text,
+                                token.idx,
+                                token.lemma_,
+                                pos,
+                                token.tag_,
+                                token.dep_,
+                                token.ent_type_)
+                sanitize_tokens.append(token)
+        else:
+            for token in tokens:
+                token = Token(token)
+                sanitize_tokens.append(token)
+        return sanitize_tokens
+
+    @overrides
+    def batch_split_words(self, sentences: List[str]) -> List[List[Token]]:
+        split_words = []
+        if self._pos_tags:
+            for sent in sentences:
+                split_words.append(self._sanitize(tokens) for tokens in poss.cut(sent))
+        else:
+            for sent in sentences:
+                split_words.append(self._sanitize(tokens) for tokens in jieba.cut(sent))
+        return split_words
+
+    @overrides
+    def split_words(self, sentence: str) -> List[Token]:
+        if self._pos_tags:
+            return self._sanitize(poss.cut(sentence))
+        else:
+            return self._sanitize(jieba.cut(sentence))
