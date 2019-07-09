@@ -242,7 +242,7 @@ class THUNLPSplitter(WordSplitter):
             seg_only = False
         else:
             seg_only = True
-        if os.path.exists(user_dict):
+        if user_dict and os.path.exists(user_dict):
             self.thunlp = thulac.thulac(seg_only=seg_only, T2S=simplify, filt=filt, user_dict=user_dict)
         else:
             self.thunlp = thulac.thulac(seg_only=seg_only, T2S=simplify, filt=filt)
@@ -288,7 +288,7 @@ class JIEBASplitter(WordSplitter):
     A ``WordSplitter`` that uses JIEBA's tokenizer. To Split Chinese sentences.
     user_dict:a txt file, one word in a line.
     """
-    def __init__(self,pos_tags: bool = False,
+    def __init__(self, pos_tags: bool = False,
                  only_tokens: bool = True,
                  user_dict: str = None) -> None:
         self._pos_tags = pos_tags

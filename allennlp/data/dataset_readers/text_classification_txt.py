@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union
 import json
 import logging
 
@@ -41,12 +41,14 @@ class TextClassificationTxtReader(DatasetReader):
     def __init__(self,
                  tokenizer: Tokenizer = None,
                  token_indexers: Dict[str, TokenIndexer] = None,
+                 chinese_space: bool = False,
                  max_sequence_length: int = None,
                  skip_label_indexing: bool = False,
                  lazy: bool = False) -> None:
         super().__init__(lazy)
         self._tokenizer = tokenizer or WordTokenizer()
         self._token_indexers = token_indexers or {'tokens': SingleIdTokenIndexer()}
+        self._chinese_space = chinese_space
         self._max_sequence_length = max_sequence_length
         self._skip_label_indexing = skip_label_indexing
 
@@ -55,14 +57,19 @@ class TextClassificationTxtReader(DatasetReader):
         # if `file_path` is a URL, redirect to the cache
         file_path = cached_path(file_path)
 
-        with open(file_path, 'r') as cnews_file:
+        with open(file_path, 'r', encoding='utf-8') as cnews_file:
             logger.info("Reading cnews instances from text dataset at: %s", file_path)
             for line in cnews_file:
-                example = line.split(" ")
-                if len(example) != 2:
+                example = []
+                if self._chinese_space:
+                    example = line.split("\t")
+                else:
+                    example = line.split(" ")
+
+                if len(example) < 2:
                     continue
                 label = example[0]
-                text = example[1]
+                text = "".join(example[1:])
 
                 if self._skip_label_indexing:
                     try:
