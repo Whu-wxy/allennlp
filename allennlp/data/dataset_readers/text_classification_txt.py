@@ -6,7 +6,7 @@ from overrides import overrides
 
 from allennlp.common.file_utils import cached_path
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
-from allennlp.data.fields import Field, TextField, LabelField, MetadataField
+from allennlp.data.fields import Field, TextField, LabelField
 from allennlp.data.instance import Instance
 from allennlp.data.token_indexers import SingleIdTokenIndexer, TokenIndexer
 from allennlp.data.tokenizers import Tokenizer, WordTokenizer
@@ -112,11 +112,9 @@ class TextClassificationTxtReader(DatasetReader):
         text_tokens = self._tokenizer.tokenize(text)
         if self._max_sequence_length is not None:
                 text_tokens = self._truncate(text_tokens)
-        fields['text'] = TextField(text_tokens, self._token_indexers)
+        fields['tokens'] = TextField(text_tokens, self._token_indexers)
         if label:
             fields['label'] = LabelField(label,
                                          skip_indexing=self._skip_label_indexing)
 
-        metadata = {"text": [x.text for x in text_tokens]}
-        fields["metadata"] = MetadataField(metadata)
         return Instance(fields)
