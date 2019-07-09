@@ -33,19 +33,11 @@
         }
       }
     },
-    "seq2seq_encoder": {
+    "seq2vec_encoder": {
       "type": "lstm",
       "bidirectional": true,
       "input_size": 300,
       "hidden_size": 200,
-      "num_layers": 1,
-      "dropout": 0.2
-    },
-    "seq2vec_encoder": {
-      "type": "lstm",
-      "bidirectional": true,
-      "input_size": 400,
-      "hidden_size": 100,
       "num_layers": 1,
       "dropout": 0.2
     },
@@ -54,7 +46,7 @@
   "iterator": {
     "type": "bucket",
     "sorting_keys": [["tokens", "num_tokens"]],
-    "batch_size": 40
+    "batch_size": 60
   },
 
   "trainer": {
