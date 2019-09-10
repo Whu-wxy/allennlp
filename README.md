@@ -6,6 +6,8 @@
 An [Apache 2.0](https://github.com/allenai/allennlp/blob/master/LICENSE) NLP research library, built on PyTorch,
 for developing state-of-the-art deep learning models on a wide variety of linguistic tasks.
 
+由于我的研究方向改为了自然场景文本检测，这个fork的库我懒得从官方库更新了，有需要的代码可以从我这里搬（顺便点个star，谢谢支持）
+
 ## Quick Links
 
 * [Website](https://allennlp.org/)
